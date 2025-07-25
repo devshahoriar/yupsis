@@ -1,7 +1,8 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, usePathname, useRouter } from "next/navigation";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { api } from "@/trpc/react";
 import { ProductCard } from "@/components/shared/product-card";
@@ -18,11 +19,70 @@ import {
 import { Search } from "lucide-react";
 
 export default function ProductsPage() {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<"name" | "price-low" | "price-high">(
-    "name",
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Initialize state from URL params
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('search') ?? "");
+  const [selectedCategory, setSelectedCategory] = useState<string>(
+    searchParams.get('category') ?? "all"
   );
+  const [sortBy, setSortBy] = useState<"name" | "price-low" | "price-high">(
+    (searchParams.get('sort') as "name" | "price-low" | "price-high") ?? "name"
+  );
+
+  // Update URL when filters change
+  const updateURL = useCallback((params: Record<string, string | null>) => {
+    const newParams = new URLSearchParams(searchParams);
+    
+    Object.entries(params).forEach(([key, value]) => {
+      if (value && value !== "all" && value !== "") {
+        newParams.set(key, value);
+      } else {
+        newParams.delete(key);
+      }
+    });
+
+    router.replace(`${pathname}?${newParams.toString()}`);
+  }, [searchParams, pathname, router]);
+
+  // Handle search change (with debouncing)
+  const handleSearchChange = (value: string) => {
+    setSearchQuery(value);
+  };
+
+  // Handle category change
+  const handleCategoryChange = (value: string) => {
+    setSelectedCategory(value);
+    updateURL({ search: searchQuery, category: value, sort: sortBy });
+  };
+
+  // Handle sort change
+  const handleSortChange = (value: "name" | "price-low" | "price-high") => {
+    setSortBy(value);
+    updateURL({ search: searchQuery, category: selectedCategory, sort: value });
+  };
+
+  // Debounced effect for search URL updates
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      updateURL({ search: searchQuery, category: selectedCategory, sort: sortBy });
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, updateURL, selectedCategory, sortBy]);
+
+  // Sync state with URL params on mount and URL changes
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') ?? "";
+    const urlCategory = searchParams.get('category') ?? "all";
+    const urlSort = (searchParams.get('sort') as "name" | "price-low" | "price-high") ?? "name";
+    
+    setSearchQuery(urlSearch);
+    setSelectedCategory(urlCategory);
+    setSortBy(urlSort);
+  }, [searchParams]);
 
   const { data: categories = [] } = api.product.getCategories.useQuery();
 
@@ -91,7 +151,7 @@ export default function ProductsPage() {
               <Input
                 placeholder="Search products..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 className="pl-10"
               />
             </div>
@@ -99,7 +159,7 @@ export default function ProductsPage() {
             <div className="flex gap-4">
               <Select
                 value={selectedCategory}
-                onValueChange={setSelectedCategory}
+                onValueChange={handleCategoryChange}
               >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Category" />
@@ -116,9 +176,7 @@ export default function ProductsPage() {
 
               <Select
                 value={sortBy}
-                onValueChange={(value: "name" | "price-low" | "price-high") =>
-                  setSortBy(value)
-                }
+                onValueChange={handleSortChange}
               >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Sort by" />
@@ -174,6 +232,7 @@ export default function ProductsPage() {
                   setSearchQuery("");
                   setSelectedCategory("all");
                   setSortBy("name");
+                  router.replace(pathname); // Clear all URL params
                 }}
               >
                 Clear Filters
