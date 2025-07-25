@@ -1,0 +1,232 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { api } from "@/trpc/react";
+import { ProductCard } from "@/components/shared/product-card";
+import { ProductCardSkeleton } from "@/components/shared/product-card-skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Search } from "lucide-react";
+
+export default function ProductsPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name");
+
+  const { data: allProducts } = api.product.getAll.useQuery();
+
+  const {
+    data: paginatedData,
+    hasNextPage,
+    fetchNextPage,
+    isFetchingNextPage,
+    isLoading,
+    error,
+  } = api.product.getPaginated.useInfiniteQuery(
+    { limit: 4 },
+    {
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  );
+
+  const allPaginatedProducts = useMemo(() => {
+    return paginatedData?.pages.flatMap((page) => page.items) ?? [];
+  }, [paginatedData]);
+
+  const filteredAndSortedProducts = useMemo(() => {
+    return allPaginatedProducts
+      .filter((product) => {
+        const matchesSearch =
+          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          product.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesCategory =
+          selectedCategory === "all" || product.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "price-low":
+            return a.price - b.price;
+          case "price-high":
+            return b.price - a.price;
+          case "name":
+          default:
+            return a.name.localeCompare(b.name);
+        }
+      });
+  }, [allPaginatedProducts, searchQuery, selectedCategory, sortBy]);
+
+  const categories = allProducts
+    ? [...new Set(allProducts.map((p) => p.category))]
+    : [];
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-destructive mb-4 text-2xl font-bold">
+            Error Loading Products
+          </h1>
+          <p className="text-muted-foreground">
+            Failed to load products. Please try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen">
+      {/* Header */}
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-16 dark:from-blue-950 dark:to-indigo-950">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h1 className="mb-4 text-4xl font-bold md:text-5xl">
+              Our Products
+            </h1>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+              Discover our complete collection of premium products carefully
+              curated for quality and value.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Filters */}
+      <section className="bg-background/95 supports-[backdrop-filter]:bg-background/60 border-b py-8 backdrop-blur">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            {/* Search */}
+            <div className="relative max-w-md flex-1">
+              <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 transform" />
+              <Input
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+
+            <div className="flex gap-4">
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Name</SelectItem>
+                  <SelectItem value="price-low">Price: Low to High</SelectItem>
+                  <SelectItem value="price-high">Price: High to Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="text-muted-foreground mt-4 text-sm">
+            {isLoading ? (
+              "Loading products..."
+            ) : (
+              <>
+                Showing {filteredAndSortedProducts?.length ?? 0} product
+                {filteredAndSortedProducts?.length !== 1 ? "s" : ""}
+                {hasNextPage && (
+                  <span className="ml-2 text-blue-600">
+                    (Scroll down to load more)
+                  </span>
+                )}
+                {isFetchingNextPage && (
+                  <span className="ml-2 text-blue-600">Loading more...</span>
+                )}
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Products Grid */}
+      <section className="py-12">
+        <div className="container mx-auto px-4">
+          {isLoading ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 12 }).map((_, i) => (
+                <ProductCardSkeleton key={i} />
+              ))}
+            </div>
+          ) : filteredAndSortedProducts?.length === 0 ? (
+            <div className="py-12 text-center">
+              <h2 className="mb-4 text-2xl font-bold">No products found</h2>
+              <p className="text-muted-foreground mb-6">
+                Try adjusting your search or filter criteria.
+              </p>
+              <Button
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("all");
+                }}
+              >
+                Clear Filters
+              </Button>
+            </div>
+          ) : (
+            <InfiniteScroll
+              dataLength={filteredAndSortedProducts.length}
+              next={fetchNextPage}
+              hasMore={hasNextPage ?? false}
+              loader={
+                <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <ProductCardSkeleton key={`loading-${i}`} />
+                  ))}
+                </div>
+              }
+              endMessage={
+                <div className="py-8 text-center">
+                  <p className="text-muted-foreground">
+                    🎉 You&apos;ve seen all products!
+                    {filteredAndSortedProducts.length > 0 && (
+                      <span className="mt-1 block">
+                        Total: {filteredAndSortedProducts.length} products
+                      </span>
+                    )}
+                  </p>
+                </div>
+              }
+              scrollThreshold={0.0}
+              className="overflow-visible"
+            >
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {filteredAndSortedProducts?.map((product, i) => (
+                  <ProductCard pos={i} key={product.id} product={product} />
+                ))}
+              </div>
+            </InfiniteScroll>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
