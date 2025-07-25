@@ -1,13 +1,13 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { api } from "@/trpc/server";
-import { ProductCard } from "./product-card";
+import { ProductCard } from "../../shared/product-card";
 import { Button } from "@/components/ui/button";
 
-export async function FeaturedProductsServer() {
-  const products = await api.product.getAll();
+export async function FeaturedProducts() {
+  const products = await api.product.getFeatured()
  
-  const featuredProducts = products.slice(0, 4);
+
 
   return (
     <section id="featured-products" className="py-16 bg-muted/30">
@@ -20,7 +20,7 @@ export async function FeaturedProductsServer() {
         </div>
         
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {featuredProducts.map((product, i) => (
+          {products.map((product, i) => (
             <ProductCard pos={i} key={product.id} product={product} />
           ))}
         </div>

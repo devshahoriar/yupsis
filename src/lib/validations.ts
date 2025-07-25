@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 const validateZipCode = (value: string) => {
   return /^\d{5}(-\d{4})?$/.test(value);

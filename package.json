@@ -13,6 +13,10 @@
     "lint:fix": "next lint --fix",
     "preview": "next build && next start",
     "start": "next start",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:node": "node --test src/contexts/__tests__/cart-reducer.node.test.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -74,7 +78,9 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
+    "@jest/globals": "^30.0.5",
     "@tailwindcss/postcss": "^4.0.15",
+    "@types/jest": "^30.0.0",
     "@types/node": "^20.14.10",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
@@ -84,6 +90,7 @@
     "prettier": "^3.5.3",
     "prettier-plugin-tailwindcss": "^0.6.11",
     "tailwindcss": "^4.0.15",
+    "ts-node": "^10.9.2",
     "tw-animate-css": "^1.3.5",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.27.0"

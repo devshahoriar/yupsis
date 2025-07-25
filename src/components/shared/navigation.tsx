@@ -25,7 +25,7 @@ export function Navigation() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
-          <span className="h-8 w-8 rounded-full bg-cyan-600 flex justify-center items-center">Y</span>
+          <span className="h-8 w-8 rounded-full bg-cyan-600 flex justify-center items-center font-black">Y</span>
           <span className="text-xl font-bold">YupStore</span>
         </Link>
 

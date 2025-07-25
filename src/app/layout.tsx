@@ -11,8 +11,8 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "YupStore - Premium E-commerce Experience",
-  description: "Discover amazing products with our curated selection of premium items.",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  description:
+    "Discover amazing products with our curated selection of premium items.",
 };
 
 const geist = Geist({
@@ -24,11 +24,16 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html suppressHydrationWarning suppressContentEditableWarning lang="en" className={`${geist.variable}`}>
+    <html
+      suppressHydrationWarning
+      suppressContentEditableWarning
+      lang="en"
+      className={`${geist.variable}`}
+    >
       <body>
         <TRPCReactProvider>
           <CartProvider>
-            <div className="min-h-screen flex flex-col">
+            <div className="flex min-h-screen flex-col">
               <Navigation />
               <main className="flex-1">{children}</main>
               <Footer />

@@ -2,9 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 import Image from "next/image";
-import { features } from '@/data';
-
-
+import { features, team } from "@/data";
 
 export default function AboutPage() {
   return (
@@ -109,26 +107,7 @@ export default function AboutPage() {
           </div>
 
           <div className="mx-auto grid max-w-4xl grid-cols-1 gap-8 md:grid-cols-3">
-            {[
-              {
-                name: "Sarah Johnson",
-                role: "CEO & Founder",
-                image:
-                  "https://images.unsplash.com/photo-1494790108755-2616b612b647?w=300&h=300&fit=crop",
-              },
-              {
-                name: "Michael Chen",
-                role: "CTO",
-                image:
-                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300&h=300&fit=crop",
-              },
-              {
-                name: "Emily Rodriguez",
-                role: "Head of Customer Experience",
-                image:
-                  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=300&h=300&fit=crop",
-              },
-            ].map((member, index) => (
+            {team.map((member, index) => (
               <div key={index} className="text-center">
                 <div className="relative mx-auto mb-4 h-32 w-32 overflow-hidden rounded-full">
                   <Image

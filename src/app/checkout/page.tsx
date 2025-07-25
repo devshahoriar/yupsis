@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -18,9 +18,14 @@ import Image from "next/image";
 import { toast } from "sonner";
 
 export default function CheckoutPage() {
+  const [ready, setReady] = useState(false);
   const { state, clearCart } = useCart();
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setReady(true);
+  }, []);
 
   const processCheckout = api.checkout.processCheckout.useMutation({
     onSuccess: (result) => {
@@ -86,25 +91,31 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
 
     try {
-
       const items = state.items.map((item) => ({
         productId: item.product.id,
         quantity: item.quantity,
         price: item.product.price,
       }));
 
-
       await processCheckout.mutateAsync({
         ...data,
         items,
       });
     } catch (error) {
-        console.log("Checkout error:", error);
+      console.log("Checkout error:", error);
       throw new Error("Failed to process checkout");
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  if (!ready) {
+    return (
+        <div className="flex min-h-screen items-center justify-center">
+            <p className="text-lg">Loading...</p>
+        </div>
+    )
+  }
 
   if (state.items.length === 0) {
     return (

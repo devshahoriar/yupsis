@@ -1,6 +1,7 @@
+/* eslint-disable react/no-unescaped-entities */
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { api } from "@/trpc/react";
 import { ProductCard } from "@/components/shared/product-card";
@@ -19,9 +20,11 @@ import { Search } from "lucide-react";
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("name");
+  const [sortBy, setSortBy] = useState<"name" | "price-low" | "price-high">(
+    "name",
+  );
 
-  const { data: allProducts } = api.product.getAll.useQuery();
+  const { data: categories = [] } = api.product.getCategories.useQuery();
 
   const {
     data: paginatedData,
@@ -30,43 +33,21 @@ export default function ProductsPage() {
     isFetchingNextPage,
     isLoading,
     error,
-  } = api.product.getPaginated.useInfiniteQuery(
-    { limit: 4 },
+  } = api.product.getFilteredPaginated.useInfiniteQuery(
+    {
+      limit: 4,
+      search: searchQuery || undefined,
+      category: selectedCategory === "all" ? undefined : selectedCategory,
+      sortBy,
+    },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
     },
   );
 
-  const allPaginatedProducts = useMemo(() => {
-    return paginatedData?.pages.flatMap((page) => page.items) ?? [];
-  }, [paginatedData]);
-
-  const filteredAndSortedProducts = useMemo(() => {
-    return allPaginatedProducts
-      .filter((product) => {
-        const matchesSearch =
-          product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          product.description.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesCategory =
-          selectedCategory === "all" || product.category === selectedCategory;
-        return matchesSearch && matchesCategory;
-      })
-      .sort((a, b) => {
-        switch (sortBy) {
-          case "price-low":
-            return a.price - b.price;
-          case "price-high":
-            return b.price - a.price;
-          case "name":
-          default:
-            return a.name.localeCompare(b.name);
-        }
-      });
-  }, [allPaginatedProducts, searchQuery, selectedCategory, sortBy]);
-
-  const categories = allProducts
-    ? [...new Set(allProducts.map((p) => p.category))]
-    : [];
+  const allProducts = paginatedData?.pages.flatMap((page) => page.items) ?? [];
+  const totalCount = paginatedData?.pages[0]?.totalCount ?? 0;
+  const totalProducts = paginatedData?.pages[0]?.totalProducts ?? 0;
 
   if (error) {
     return (
@@ -133,7 +114,12 @@ export default function ProductsPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={sortBy} onValueChange={setSortBy}>
+              <Select
+                value={sortBy}
+                onValueChange={(value: "name" | "price-low" | "price-high") =>
+                  setSortBy(value)
+                }
+              >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Sort by" />
                 </SelectTrigger>
@@ -151,8 +137,10 @@ export default function ProductsPage() {
               "Loading products..."
             ) : (
               <>
-                Showing {filteredAndSortedProducts?.length ?? 0} product
-                {filteredAndSortedProducts?.length !== 1 ? "s" : ""}
+                Showing {totalCount} product{totalCount !== 1 ? "s" : ""}
+                {searchQuery || selectedCategory !== "all" ? (
+                  <span> (filtered from {totalProducts} total)</span>
+                ) : null}
                 {hasNextPage && (
                   <span className="ml-2 text-blue-600">
                     (Scroll down to load more)
@@ -167,16 +155,15 @@ export default function ProductsPage() {
         </div>
       </section>
 
-      {/* Products Grid */}
       <section className="py-12">
         <div className="container mx-auto px-4">
           {isLoading ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {Array.from({ length: 12 }).map((_, i) => (
+              {Array.from({ length: 3 }).map((_, i) => (
                 <ProductCardSkeleton key={i} />
               ))}
             </div>
-          ) : filteredAndSortedProducts?.length === 0 ? (
+          ) : totalCount === 0 ? (
             <div className="py-12 text-center">
               <h2 className="mb-4 text-2xl font-bold">No products found</h2>
               <p className="text-muted-foreground mb-6">
@@ -186,6 +173,7 @@ export default function ProductsPage() {
                 onClick={() => {
                   setSearchQuery("");
                   setSelectedCategory("all");
+                  setSortBy("name");
                 }}
               >
                 Clear Filters
@@ -193,12 +181,12 @@ export default function ProductsPage() {
             </div>
           ) : (
             <InfiniteScroll
-              dataLength={filteredAndSortedProducts.length}
+              dataLength={allProducts.length}
               next={fetchNextPage}
               hasMore={hasNextPage ?? false}
               loader={
                 <div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
+                  {Array.from({ length: 3 }).map((_, i) => (
                     <ProductCardSkeleton key={`loading-${i}`} />
                   ))}
                 </div>
@@ -206,20 +194,15 @@ export default function ProductsPage() {
               endMessage={
                 <div className="py-8 text-center">
                   <p className="text-muted-foreground">
-                    🎉 You&apos;ve seen all products!
-                    {filteredAndSortedProducts.length > 0 && (
-                      <span className="mt-1 block">
-                        Total: {filteredAndSortedProducts.length} products
-                      </span>
-                    )}
+                    🎉 You've seen all {totalCount} products!
                   </p>
                 </div>
               }
-              scrollThreshold={0.0}
+              scrollThreshold={0.9}
               className="overflow-visible"
             >
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {filteredAndSortedProducts?.map((product, i) => (
+                {allProducts.map((product, i) => (
                   <ProductCard pos={i} key={product.id} product={product} />
                 ))}
               </div>

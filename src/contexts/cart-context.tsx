@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client";
 
+import type { Product } from '@/types';
 import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from "react";
-import { type Product } from "@/server/api/routers/product";
+
 
 export interface CartItem {
   product: Product;
@@ -15,7 +16,7 @@ export interface CartState {
   itemCount: number;
 }
 
-type CartAction =
+export type CartAction =
   | { type: "ADD_ITEM"; payload: Product }
   | { type: "REMOVE_ITEM"; payload: number }
   | { type: "UPDATE_QUANTITY"; payload: { id: number; quantity: number } }
@@ -36,7 +37,7 @@ function calculateItemCount(items: CartItem[]): number {
   return items.reduce((sum, item) => sum + item.quantity, 0);
 }
 
-function cartReducer(state: CartState, action: CartAction): CartState {
+export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_ITEM": {
       const existingItem = state.items.find(item => item.product.id === action.payload.id);
