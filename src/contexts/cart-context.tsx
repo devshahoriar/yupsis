@@ -1,9 +1,14 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 "use client";
 
-import type { Product } from '@/types';
-import React, { createContext, useContext, useReducer, useEffect, type ReactNode } from "react";
-
+import type { Product } from "@/types";
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useEffect,
+  type ReactNode,
+} from "react";
 
 export interface CartItem {
   product: Product;
@@ -30,7 +35,10 @@ const initialState: CartState = {
 };
 
 function calculateTotal(items: CartItem[]): number {
-  return items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  return items.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0,
+  );
 }
 
 function calculateItemCount(items: CartItem[]): number {
@@ -40,57 +48,63 @@ function calculateItemCount(items: CartItem[]): number {
 export function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
     case "ADD_ITEM": {
-      const existingItem = state.items.find(item => item.product.id === action.payload.id);
-      
+      const existingItem = state.items.find(
+        (item) => item.product.id === action.payload.id,
+      );
+
       let newItems: CartItem[];
       if (existingItem) {
-        newItems = state.items.map(item =>
+        newItems = state.items.map((item) =>
           item.product.id === action.payload.id
             ? { ...item, quantity: item.quantity + 1 }
-            : item
+            : item,
         );
       } else {
         newItems = [...state.items, { product: action.payload, quantity: 1 }];
       }
-      
+
       return {
         items: newItems,
         total: calculateTotal(newItems),
         itemCount: calculateItemCount(newItems),
       };
     }
-    
+
     case "REMOVE_ITEM": {
-      const newItems = state.items.filter(item => item.product.id !== action.payload);
+      const newItems = state.items.filter(
+        (item) => item.product.id !== action.payload,
+      );
       return {
         items: newItems,
         total: calculateTotal(newItems),
         itemCount: calculateItemCount(newItems),
       };
     }
-    
+
     case "UPDATE_QUANTITY": {
-      const newItems = state.items.map(item =>
-        item.product.id === action.payload.id
-          ? { ...item, quantity: Math.max(0, action.payload.quantity) }
-          : item
-      ).filter(item => item.quantity > 0);
-      
+      const newItems = state.items
+        .map((item) =>
+          item.product.id === action.payload.id
+            ? { ...item, quantity: Math.max(0, action.payload.quantity) }
+            : item,
+        )
+        .filter((item) => item.quantity > 0);
+
       return {
         items: newItems,
         total: calculateTotal(newItems),
         itemCount: calculateItemCount(newItems),
       };
     }
-    
+
     case "CLEAR_CART": {
       return initialState;
     }
-    
+
     case "LOAD_CART": {
       return action.payload;
     }
-    
+
     default:
       return state;
   }
@@ -144,7 +158,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <CartContext.Provider value={{ state, addItem, removeItem, updateQuantity, clearCart }}>
+    <CartContext.Provider
+      value={{ state, addItem, removeItem, updateQuantity, clearCart }}
+    >
       {children}
     </CartContext.Provider>
   );

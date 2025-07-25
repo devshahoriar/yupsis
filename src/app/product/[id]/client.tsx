@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import ProductJsonLd from "@/components/shared/ProductJsonLd";
 import { ProductCard } from "@/components/shared/product-card";
 import { ProductCardSkeleton } from "@/components/shared/product-card-skeleton";
+import Link from "next/link";
 
 const Client = () => {
   const params = useParams();
@@ -37,7 +38,11 @@ const Client = () => {
     error,
   } = api.product.getById.useQuery(
     { id: productId },
-    { enabled: !isNaN(productId) },
+    {
+      enabled: !isNaN(productId),
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+    },
   );
 
   // Get related products from the same category
@@ -84,10 +89,8 @@ const Client = () => {
       <div className="min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-            {/* Image Skeleton */}
             <div className="bg-muted aspect-square animate-pulse rounded-lg"></div>
 
-            {/* Content Skeleton */}
             <div className="space-y-4">
               <div className="bg-muted h-8 w-3/4 animate-pulse rounded"></div>
               <div className="bg-muted h-6 w-1/2 animate-pulse rounded"></div>
@@ -135,7 +138,12 @@ const Client = () => {
             <nav className="text-muted-foreground text-sm">
               <span>Products</span>
               <span className="mx-2">/</span>
-              <span>{product.category}</span>
+              <Link
+                className="text-foreground font-medium"
+                href={`/products?category=${product.category}`}
+              >
+                {product.category}
+              </Link>
               <span className="mx-2">/</span>
               <span className="text-foreground font-medium">
                 {product.name}
@@ -302,7 +310,6 @@ const Client = () => {
       </div>
     </>
   );
-}
+};
 
-
-export default Client
+export default Client;
