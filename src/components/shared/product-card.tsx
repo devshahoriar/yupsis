@@ -31,7 +31,6 @@ export function ProductCard({ product, pos }: ProductCardProps) {
   return (
     <>
       <ProductJsonLd product={product} />
-
       <Card className="group overflow-hidden py-0 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg">
         <CardHeader className="p-0">
           <div className="relative aspect-square overflow-hidden">

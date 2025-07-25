@@ -1,4 +1,4 @@
-
+'use client'
 import type { Product } from '@/types';
 import { ProductJsonLd as NextSeoProductJsonLd } from "next-seo";
 
