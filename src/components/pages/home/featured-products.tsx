@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 export async function FeaturedProducts() {
   const products = await api.product.getFeatured()
  
-
-
   return (
     <section id="featured-products" className="py-16 bg-muted/30">
       <div className="container mx-auto px-4">

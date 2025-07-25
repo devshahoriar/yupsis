@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/contexts/cart-context";
@@ -311,9 +311,16 @@ export default function CheckoutPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="sameAsShipping"
-                      {...register("billingAddress.sameAsShipping")}
+                    <Controller
+                      name="billingAddress.sameAsShipping"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="sameAsShipping"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
                     />
                     <Label htmlFor="sameAsShipping">
                       Same as shipping address
@@ -447,14 +454,34 @@ export default function CheckoutPage() {
               <Card>
                 <CardContent className="space-y-4 pt-6">
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="newsletter" {...register("newsletter")} />
+                    <Controller
+                      name="newsletter"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="newsletter"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
                     <Label htmlFor="newsletter">
                       Subscribe to our newsletter for updates and offers
                     </Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    <Checkbox id="terms" {...register("terms")} />
+                    <Controller
+                      name="terms"
+                      control={form.control}
+                      render={({ field }) => (
+                        <Checkbox
+                          id="terms"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      )}
+                    />
                     <Label htmlFor="terms">
                       I accept the terms and conditions
                     </Label>
