@@ -2,7 +2,7 @@ import ProductJsonLd from "@/components/shared/ProductJsonLd";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { products } from "@/data";
-import { api } from "@/trpc/server";
+import { api, HydrateClient } from "@/trpc/server";
 import { RotateCcw, Shield, Star, Truck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,7 +47,7 @@ export default async function ProductPage({
   }
 
   return (
-    <>
+    <HydrateClient>
       <ProductJsonLd product={product} />
       <div className="min-h-screen">
         {/* Breadcrumb & Back Button */}
@@ -163,6 +163,6 @@ export default async function ProductPage({
           <RelatedProduct product={product} />
         </div>
       </div>
-    </>
+    </HydrateClient>
   );
 }
